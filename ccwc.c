@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     }
 
     // starts counters
-    int bytes_counter = 0, lines_counter = 0, words_counter = 0, chars_counter = 0;
+    int bytes = 0, lines = 0, words = 0, chars = 0;
 
     // reads file for bytes, lines and words counters
     if (count_bytes_enabled || count_lines_enabled || count_words_enabled)
@@ -54,16 +54,16 @@ int main(int argc, char *argv[])
         int character, found_word_separator = 1;
         while((character = fgetc(file)) != EOF)
         {
-            if (count_bytes_enabled) bytes_counter++;
+            if (count_bytes_enabled) bytes++;
     
-            if (count_lines_enabled && character == '\n') lines_counter++;
+            if (count_lines_enabled && character == '\n') lines++;
     
             if (count_words_enabled)
             {
                 int is_word_separator = isspace((unsigned char) character);
                 if (found_word_separator && !is_word_separator)
                 {
-                    words_counter++;
+                    words++;
                     found_word_separator = 0;
                 }
                 else if (is_word_separator)
@@ -81,16 +81,16 @@ int main(int argc, char *argv[])
         wint_t wc;
         while ((wc = fgetwc(file)) != WEOF)
         {
-            chars_counter++;
+            chars++;
         }
     }
 
     // output
     fclose(file);
-    if (count_lines_enabled) printf("%d ", lines_counter);
-    if (count_words_enabled) printf("%d ", words_counter);
-    if (count_bytes_enabled) printf("%d ", bytes_counter);
-    if (count_chars_enabled) printf("%d ", chars_counter);
+    if (count_lines_enabled) printf("%d ", lines);
+    if (count_words_enabled) printf("%d ", words);
+    if (count_bytes_enabled) printf("%d ", bytes);
+    if (count_chars_enabled) printf("%d ", chars);
     printf("%s\n", argv[argc - 1]);
 
     return 0;
