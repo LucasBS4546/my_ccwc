@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -10,6 +9,7 @@
 
 int main(int argc, char *argv[])
 {
+    setlocale(LC_CTYPE, "");
     if (argc < 2)
     {
         printf("Usage: %s [FILE_NAME]\n", argv[0]);
@@ -37,11 +37,7 @@ int main(int argc, char *argv[])
     if (!count_bytes_enabled && !count_lines_enabled && !count_words_enabled && !count_chars_enabled)
     count_bytes_enabled = count_lines_enabled = count_words_enabled = 1;
     
-    // checks file accessibility and opens file
-    if (access(filename, F_OK) != 0){
-        printf("Error: No access to file %s. Either create the file or grant access to run command.\n", argv[argc - 1]);
-        return 1;
-    }
+    // opens file
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
@@ -76,13 +72,12 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        rewind(file);
+        if (count_chars_enabled) rewind(file); // necessary for reopening of file in chars counting loop, if necessary
     }
 
     // reads file for chars counter (uses loop with encoding)
     if (count_chars_enabled)
     {
-        setlocale(LC_CTYPE, "");
         wint_t wc;
         while ((wc = fgetwc(file)) != WEOF)
         {
