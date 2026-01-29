@@ -3,9 +3,10 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <locale.h>
+#include <wchar.h>
 
-#define BLOCK_SIZE 512
-typedef uint8_t BYTE;
 
 int main(int argc, char *argv[])
 {
@@ -14,72 +15,87 @@ int main(int argc, char *argv[])
         printf("Usage: %s [FILE_NAME]\n", argv[0]);
         return 1;
     }
-
+    
     // read args
     const char *filename = argv[argc-1];
-    int count_bytes = 0; // -c
-    int count_lines = 0; // -l
-    int count_words = 0; // -w
-    int count_chars = 0; // -m
+    int count_bytes_enabled = 0; // -c
+    int count_lines_enabled = 0; // -l
+    int count_words_enabled = 0; // -w
+    int count_chars_enabled = 0; // -m
     for (int i = 1; i < argc - 1; i++)
     {
-             if (strcmp(argv[i], "-c") == 0) count_bytes = 1;
-        else if (strcmp(argv[i], "-l") == 0) count_lines = 1;
-        else if (strcmp(argv[i], "-w") == 0) count_words = 1;
-        else if (strcmp(argv[i], "-m") == 0) count_chars = 1;
-           else {
-                printf("Error: Unrecognized argument %s\n", argv[i]);
-                return 1;
-            }
+        if (strcmp(argv[i], "-c") == 0) count_bytes_enabled = 1;
+        else if (strcmp(argv[i], "-l") == 0) count_lines_enabled = 1;
+        else if (strcmp(argv[i], "-w") == 0) count_words_enabled = 1;
+        else if (strcmp(argv[i], "-m") == 0) count_chars_enabled = 1;
+        else {
+            printf("Error: Unrecognized argument %s\n", argv[i]);
+            return 1;
+        }
     }
-
-    // default if none are given: -c -l -w
-    if (!count_bytes && !count_lines && !count_words && !count_chars)
-        count_bytes = count_lines = count_words = 1;
-
-    // check if file does not exists or cannot be accessed
+    // default args if none are given: -c -l -w
+    if (!count_bytes_enabled && !count_lines_enabled && !count_words_enabled && !count_chars_enabled)
+    count_bytes_enabled = count_lines_enabled = count_words_enabled = 1;
+    
+    // checks file accessibility and opens file
     if (access(filename, F_OK) != 0){
         printf("Error: No access to file %s. Either create the file or grant access to run command.\n", argv[argc - 1]);
         return 1;
     }
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        printf("Error: Could not open file\n");
+        return 1;
+    }
+
+    // starts counters
+    int bytes_counter = 0, lines_counter = 0, words_counter = 0, chars_counter = 0;
+
+    // reads file for bytes, lines and words counters
+    if (count_bytes_enabled || count_lines_enabled || count_words_enabled)
+    {
+        int character, found_word_separator = 1;
+        while((character = fgetc(file)) != EOF)
+        {
+            if (count_bytes_enabled) bytes_counter++;
+    
+            if (count_lines_enabled && character == '\n') lines_counter++;
+    
+            if (count_words_enabled)
+            {
+                int is_word_separator = isspace((unsigned char) character);
+                if (found_word_separator && !is_word_separator)
+                {
+                    words_counter++;
+                    found_word_separator = 0;
+                }
+                else if (is_word_separator)
+                {
+                    found_word_separator = 1;
+                }
+            }
+        }
+        rewind(file);
+    }
+
+    // reads file for chars counter (uses loop with encoding)
+    if (count_chars_enabled)
+    {
+        setlocale(LC_CTYPE, "");
+        wint_t wc;
+        while ((wc = fgetwc(file)) != WEOF)
+        {
+            chars_counter++;
+        }
+    }
 
     // output
-    if (count_bytes)
-    {
-        FILE *file = fopen(filename, "rb");
-        if (file == NULL)
-        {
-            printf("Error: Could not open file\n");
-            return 1;
-        }
-
-        printf(""); // TODO
-        fclose(file);
-    }
-    if (count_lines | count_words | count_chars)
-    {
-        FILE *file = fopen(filename, "r");
-        if (file == NULL)
-        {
-            printf("Error: Could not open file\n");
-            return 1;
-        }
-
-        if (count_lines)
-        {
-            printf(""); // TODO
-        }
-        if (count_words) 
-        {
-            printf(""); // TODO
-        }
-        if (count_chars)
-        {
-            printf(""); // TODO
-        }
-        fclose(file);
-    }
-
+    fclose(file);
+    if (count_lines_enabled) printf("%d ", lines_counter);
+    if (count_words_enabled) printf("%d ", words_counter);
+    if (count_bytes_enabled) printf("%d ", bytes_counter);
+    if (count_chars_enabled) printf("%d ", chars_counter);
     printf("%s\n", argv[argc - 1]);
 
     return 0;
