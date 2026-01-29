@@ -54,9 +54,9 @@ int main(int argc, char *argv[])
         int character, found_word_separator = 1;
         while((character = fgetc(file)) != EOF)
         {
-            if (count_bytes_enabled) bytes++;
+            bytes++;
     
-            if (count_lines_enabled && character == '\n') lines++;
+            if (character == '\n') lines++;
     
             if (count_words_enabled)
             {
