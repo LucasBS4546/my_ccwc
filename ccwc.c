@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[])
 {
-    setlocale(LC_CTYPE, "");
+    setlocale(LC_ALL, "");
     if (argc < 2)
     {
         printf("Usage: %s [FILE_NAME]\n", argv[0]);
@@ -72,17 +72,25 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        if (count_chars_enabled) rewind(file); // necessary for reopening of file in chars counting loop, if necessary
+	if (count_bytes_enabled)
+	{
+	    fclose(file);
+	    file = fopen(filename, "r");
+	    if (file == NULL)
+            {
+	        printf("Error: Could not open file\n");
+		return 1;
+	    }
+	}
     }
-
     // reads file for chars counter (uses loop with encoding)
     if (count_chars_enabled)
-    {
+    {	
         wint_t wc;
         while ((wc = fgetwc(file)) != WEOF)
         {
-            chars++;
-        }
+	    chars++;
+        }	
     }
 
     // output
