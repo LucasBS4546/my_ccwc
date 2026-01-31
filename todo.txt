@@ -1,0 +1,5 @@
+CCWC
+- Currently, opens file twice to handle stream problem with 'char' vs 'wide-char' handling of file (can't rewind)
+	> Maybe try binary reading and manual character decoding?
+
+- Grep support missing
